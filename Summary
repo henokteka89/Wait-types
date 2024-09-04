@@ -1,0 +1,82 @@
+SQL Server Wait Types
+SQL Server wait types provide insights into how SQL Server is spending time waiting for resources, which
+can help identify performance bottlenecks. Here’s an overview of some common SQL Server wait types:
+1. **CPU-Related Wait Types**
+- **SOS_SCHEDULER_YIELD**: Occurs when a task voluntarily yields the processor to let another task
+run. High values may indicate CPU pressure or inefficient query plans.
+- **CXPACKET**: Indicates parallel query execution waits. High CXPACKET waits often point to issues with
+parallelism, such as poorly configured `MAXDOP` or inefficient parallel execution plans.
+- **SOS_CPU_QUANTUM_EXPIRED**: Indicates that a task has used its entire CPU quantum (time slice)
+and is being switched out for another task. This might indicate CPU pressure or long-running tasks.
+2. **I/O-Related Wait Types**
+- **PAGEIOLATCH_XX**: Waits related to reading data pages from disk into memory. High waits on these
+types may indicate disk I/O bottlenecks or memory pressure.
+- **PAGEIOLATCH_SH**: Waits while reading pages into the buffer cache (shared latch).
+- **PAGEIOLATCH_EX**: Waits while reading pages into the buffer cache for exclusive access.
+- **WRITELOG**: Occurs when SQL Server is waiting for log writes to complete. High WRITELOG waits
+often indicate disk I/O issues with the transaction log file.
+- **ASYNC_IO_COMPLETION**: Waits for asynchronous I/O operations to complete, often associated with
+backups and large data file operations.
+- **IO_COMPLETION**: Waits for I/O operations to complete, typically related to data file reads and writes.
+3. **Locking and Blocking Wait Types**
+- **LCK_M_XX**: Represents waits caused by locks. Different types indicate different lock modes:
+- **LCK_M_S**: Waits for a shared lock.
+- **LCK_M_X**: Waits for an exclusive lock.
+- **LCK_M_U**: Waits for an update lock.
+- **LCK_M_IS**: Intent shared lock, typically when a transaction is reading data.
+- **LCK_M_IX**: Intent exclusive lock, typically when a transaction is modifying data.
+- **LCK_M_BU**: Bulk update lock, usually seen during bulk operations like bulk inserts.
+4. **Memory-Related Wait Types**
+- **RESOURCE_SEMAPHORE**: Occurs when a query is waiting for memory to execute. High
+RESOURCE_SEMAPHORE waits indicate memory pressure or large queries requiring excessive memory.
+- **MEMORY_ALLOCATION_EXT**: Waits for memory to be allocated for certain operations. High values
+might indicate overall memory pressure.
+- **BUFFER_IO**: Waits related to the reading and writing of data pages in the buffer cache.
+5. **Network-Related Wait Types**
+- **ASYNC_NETWORK_IO**: Occurs when SQL Server is waiting for the client to process data sent over
+the network. High waits here may indicate a slow client or network issues.
+- **NETWORK_IO**: Similar to ASYNC_NETWORK_IO, but specifically refers to waits related to network I/O operations.
+
+6. **Latching Wait Types**
+- **PAGELATCH_XX**: In-memory latch waits, not related to disk I/O, typically occurring when SQL Server
+is synchronizing access to data pages in memory.
+- **PAGELATCH_SH**: Shared latch on an in-memory page.
+- **PAGELATCH_EX**: Exclusive latch on an in-memory page.
+- **PAGELATCH_UP**: Update latch on an in-memory page.
+7. **Deadlock and Blocking Wait Types**
+- **DEADLOCK_GRAPH**: Indicates that a deadlock has occurred. SQL Server automatically chooses one
+of the processes involved in the deadlock as a victim to roll back.
+- **LCK_M_DEADLOCK**: Waits related to deadlocks, where one transaction is waiting on another that is
+also waiting, leading to a deadlock situation.
+8. **Query Execution and Compilation Wait Types**
+- **SQLCLR_XX**: Waits related to SQL Common Language Runtime (CLR) execution. These waits occur
+when executing CLR objects such as stored procedures, triggers, or functions.
+- **RESOURCE_SEMAPHORE_QUERY_COMPILE**: Waits occurring when queries are waiting for
+resources to compile, often seen when there are memory pressure or many complex queries.
+- **QUERY_EXECUTION_INDEX**: Waits related to executing queries that involve index operations, like
+rebuilding indexes.
+9. **Parallelism-Related Wait Types**
+- **CXCONSUMER**: Similar to CXPACKET, but specific to the Consumer phase in parallel query
+execution.
+- **EXCHANGE**: Waits related to data exchange between parallel threads during query execution. High
+waits can indicate inefficient parallel execution plans.
+10. **Application-Related Wait Types**
+- **OLEDB**: Waits for data returned by an OLE DB provider, often seen in linked server queries or when
+using OLE DB providers for external data sources.
+- **CLR_AUTO_EVENT**: Waits related to the CLR automatic event processing.
+11. **Miscellaneous Wait Types**
+- **FT_IFTS_SCHEDULER_IDLE_WAIT**: Full-text indexing waits, indicating that the scheduler is idle,
+waiting for full-text operations to be scheduled.
+- **SOS_WORK_DISPATCHER**: Waits for worker threads to be dispatched, usually seen when there’s a
+shortage of worker threads available to handle tasks.
+How to Use Wait Types for Troubleshooting:
+1. **Identify High Wait Types**: Use the DMV `sys.dm_os_wait_stats` to identify the top wait types on your
+server.
+2. **Correlate with Performance Symptoms**: Map the high wait types to performance issues observed by
+users (e.g., slow queries, timeouts).
+3. **Investigate and Optimise**: Drill down into the specific wait types using DMVs like
+`sys.dm_exec_requests`, `sys.dm_exec_query_stats`, and `sys.dm_exec_sessions` to find the queries and
+operations causing the waits.
+4. **Monitor Trends**: Regularly monitor wait statistics to understand patterns and identify new or worsening
+performance issues.
+Understanding wait types is crucial for diagnosing and resolving SQL Server performance issues effectively.
